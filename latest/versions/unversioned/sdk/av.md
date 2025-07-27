@@ -1,0 +1,179 @@
+---
+title: AV
+description: A universal library that provides separate APIs for Audio and Video playback.
+sourceCodeUrl: https://github.com/expo/expo/tree/main/packages/expo-av
+packageName: expo-av
+iconUrl: /static/images/packages/expo-av.png
+platforms: ["android", "ios", "tvos", "web"]
+isDeprecated: true
+---
+
+import {
+  ConfigReactNative,
+  ConfigPluginExample,
+  ConfigPluginProperties,
+} from '~/ui/components/ConfigSection';
+
+> **warning** **Deprecated:** The `Video` and `Audio` APIs from `expo-av` have now been deprecated and replaced by improved versions in [`expo-video`](video.md) and [`expo-audio`](audio.md). We recommend using those libraries instead. `expo-av` is not receiving patches and will be removed in SDK 54.
+
+The [`Audio.Sound`](audio.md) objects and [`Video`](video-av.md) components share a unified imperative API for media playback.
+
+Note that for `Video`, all of the operations are also available via props on the component. However, we recommend using this imperative playback API for most applications where finer control over the state of the video playback is needed.
+
+See the [playlist example app](https://github.com/expo/playlist-example) for an example on the playback API for both `Audio.Sound` and `Video`.
+
+> **Info** Audio recording APIs are not available on tvOS (Apple TV).
+
+## Installation
+
+## Configuration in app config
+
+You can configure `expo-av` using its built-in [config plugin](/config-plugins/introduction/) if you use config plugins in your project ([EAS Build](/build/introduction) or `npx expo run:[android|ios]`). The plugin allows you to configure various properties that cannot be set at runtime and require building a new app binary to take effect.
+
+```json app.json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ]
+    ]
+  }
+}
+```
+
+If you're not using Continuous Native Generation ([CNG](/workflow/continuous-native-generation/)) (you're using native **android** and **ios** projects manually), then you need to configure following permissions in your native projects:
+
+- For Android, add `android.permission.RECORD_AUDIO` permission to your project's **android/app/src/main/AndroidManifest.xml**:
+
+  ```xml
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  ```
+
+- For iOS, add `NSMicrophoneUsageDescription` to your project's **ios/[app]/Info.plist**:
+
+  ```xml
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+  ```
+
+## Usage
+
+On this page, we reference operations on `playbackObject`. Here is an example of obtaining access to the reference for both sound and video:
+
+### Example: `Audio.Sound`
+
+```js
+await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+
+const playbackObject = new Audio.Sound();
+// OR
+const { sound: playbackObject } = await Audio.Sound.createAsync(
+  { uri: 'http://foo/bar.mp3' },
+  { shouldPlay: true }
+);
+```
+
+See the [audio documentation](audio-av.md) for further information on `Audio.Sound.createAsync()`.
+
+### Example: `Video`
+
+```js
+/* @hide ... */ /* @end */
+_handleVideoRef = component => {
+  const playbackObject = component;
+  ...
+}
+/* @hide ... */ /* @end */
+
+render() {
+  return (
+      
+      /* @hide ... */ /* @end */
+  )
+}
+```
+
+See the [video documentation](video-av.md) for further information.
+
+### Example: `setOnPlaybackStatusUpdate()`
+
+```js
+_onPlaybackStatusUpdate = playbackStatus => {
+  if (!playbackStatus.isLoaded) {
+    // Update your UI for the unloaded state
+    if (playbackStatus.error) {
+      console.log(`Encountered a fatal error during playback: ${playbackStatus.error}`);
+      // Send Expo team the error on Slack or the forums so we can help you debug!
+    }
+  } else {
+    // Update your UI for the loaded state
+
+    if (playbackStatus.isPlaying) {
+      // Update your UI for the playing state
+    } else {
+      // Update your UI for the paused state
+    }
+
+    if (playbackStatus.isBuffering) {
+      // Update your UI for the buffering state
+    }
+
+    if (playbackStatus.didJustFinish && !playbackStatus.isLooping) {
+      // The player has just finished playing and will stop. Maybe you want to play something else?
+    }
+
+    /* @hide ... */ /* @end */
+  }
+};
+
+// Load the playbackObject and obtain the reference.
+playbackObject.setOnPlaybackStatusUpdate(this._onPlaybackStatusUpdate);
+```
+
+### Example: Loop media exactly 20 times
+
+```js
+const N = 20;
+/* @hide ... */ /* @end */
+
+_onPlaybackStatusUpdate = playbackStatus => {
+  if (playbackStatus.didJustFinish) {
+    if (this.state.numberOfLoops == N - 1) {
+      playbackObject.setIsLooping(false);
+    }
+    this.setState({ numberOfLoops: this.state.numberOfLoops + 1 });
+  }
+};
+
+/* @hide ... */ /* @end */
+this.setState({ numberOfLoops: 0 });
+// Load the playbackObject and obtain the reference.
+playbackObject.setOnPlaybackStatusUpdate(this._onPlaybackStatusUpdate);
+playbackObject.setIsLooping(true);
+```
+
+## What is seek tolerance and why would I want to use it&ensp;
+
+When asked to seek an A/V item, native player in iOS sometimes may seek to a slightly different time. This technique, mentioned in [Apple documentation](https://developer.apple.com/documentation/avfoundation/avplayer/1387741-seek#discussion), is used to shorten the time of the `seekTo` call (the player may decide to play immediately from a different time than requested, instead of decoding the exact requested part and playing it with the decoding delay).
+
+If precision is important, you can specify the tolerance with which the player will seek. However, this will result in an increased delay.
+
+## API
+
+```js
+
+```
+
+## Permissions
+
+### Android
+
+You must add the following permissions to your **app.json** inside the [`expo.android.permissions`](../config/app/#permissions) array.
+
+### iOS
+
+The following usage description keys are used by this library:

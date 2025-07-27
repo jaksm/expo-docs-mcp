@@ -1,0 +1,46 @@
+{
+  "name": "expo-docs-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for semantic search of pre-indexed Expo documentation",
+  "main": "dist/mcp-server.js",
+  "type": "module",
+  "scripts": {
+    "build": "npm run clean && npm run build:server",
+    "build:server": "ncc build src/mcp-server.ts -o dist/server --target es2022 --external hnswlib-node && mv dist/server/index.js dist/mcp-server.js && rm -rf dist/server && mkdir -p dist/node_modules && cp -r node_modules/hnswlib-node dist/node_modules/ && cp -r data/* dist/ 2>/dev/null || true",
+    "dev:server": "tsx src/mcp-server.ts",
+    "clean": "rm -rf dist",
+    "start": "node dist/mcp-server.js",
+    "index-docs": "tsx scripts/index-docs.ts",
+    "search": "tsx scripts/test-search.ts",
+    "dev:build:cli": "ncc build src/cli.ts -o dist/cli --target es2022 && mv dist/cli/index.js dist/cli.js && rm -rf dist/cli",
+    "dev:cli": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "expo",
+    "documentation",
+    "mcp",
+    "semantic-search",
+    "vectorization",
+    "langchain",
+    "openai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/community": "^0.3.49",
+    "@langchain/openai": "^0.6.3",
+    "@langchain/textsplitters": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "front-matter": "^4.0.2",
+    "hnswlib-node": "^3.0.0",
+    "mdx-to-md": "^0.5.2",
+    "turndown": "^7.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.9",
+    "@types/turndown": "^5.0.5",
+    "@vercel/ncc": "^0.38.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
+  }
+}

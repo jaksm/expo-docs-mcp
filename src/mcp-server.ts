@@ -1,0 +1,195 @@
+#!/usr/bin/env node
+
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  ErrorCode,
+  McpError,
+} from '@modelcontextprotocol/sdk/types.js';
+import { SemanticSearch, SearchOptions } from './services/semantic-search.js';
+import { VersionManager } from './services/version-manager.js';
+
+const server = new Server(
+  {
+    name: 'expo-docs-mcp',
+    version: '1.0.0',
+  },
+  {
+    capabilities: {
+      tools: {},
+    },
+  }
+);
+
+// List available tools
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: 'search-expo-docs',
+        description: 'Search Expo documentation using semantic search. Requires the version to match your project\'s Expo SDK version.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'The search query to find relevant Expo documentation',
+            },
+            version: {
+              type: 'string',
+              description: 'Required: Expo SDK version (e.g., v53, v52, v51, latest). Must match your project\'s Expo version.',
+              pattern: '^(v\\d+|latest)$',
+            },
+            maxResults: {
+              type: 'number',
+              description: 'Maximum number of results to return (default: 5)',
+              minimum: 1,
+              maximum: 10,
+              default: 5,
+            },
+            scoreThreshold: {
+              type: 'number',
+              description: 'Minimum similarity score threshold (default: 0.0)',
+              minimum: 0.0,
+              maximum: 1.0,
+              default: 0.0,
+            },
+          },
+          required: ['query', 'version'],
+        },
+      },
+    ],
+  };
+});
+
+// Handle tool calls
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+
+  if (name === 'search-expo-docs') {
+    try {
+      const { query, version, maxResults = 5, scoreThreshold = 0.0 } = args as {
+        query: string;
+        version: string;
+        maxResults?: number;
+        scoreThreshold?: number;
+      };
+
+      // Validate required parameters
+      if (!query || typeof query !== 'string') {
+        throw new McpError(ErrorCode.InvalidParams, 'query parameter is required and must be a string');
+      }
+
+      if (!version || typeof version !== 'string') {
+        throw new McpError(ErrorCode.InvalidParams, 'version parameter is required and must be a string (e.g., v53, v52, v51, latest)');
+      }
+
+      // Validate version format
+      if (!VersionManager.isValidVersionFormat(version)) {
+        throw new McpError(ErrorCode.InvalidParams, `Invalid version format: ${version}. Use v53, v52, v51, or latest`);
+      }
+
+      // Check if version is available
+      if (!VersionManager.isVersionAvailable(version)) {
+        const errorMessage = await VersionManager.getMissingVersionError(version);
+        throw new McpError(ErrorCode.InvalidParams, errorMessage);
+      }
+
+      // Validate optional parameters
+      if (maxResults !== undefined && (typeof maxResults !== 'number' || maxResults < 1 || maxResults > 10)) {
+        throw new McpError(ErrorCode.InvalidParams, 'maxResults must be a number between 1 and 10');
+      }
+
+      if (scoreThreshold !== undefined && (typeof scoreThreshold !== 'number' || scoreThreshold < 0 || scoreThreshold > 1)) {
+        throw new McpError(ErrorCode.InvalidParams, 'scoreThreshold must be a number between 0.0 and 1.0');
+      }
+
+      // Perform search
+      const searchOptions: SearchOptions = {
+        maxResults,
+        scoreThreshold,
+      };
+
+      const results = await SemanticSearch.searchVersion(query, version, searchOptions);
+
+      // Format results for the AI
+      const formattedResults = results.map((result, index) => {
+        return {
+          rank: index + 1,
+          title: result.metadata.title || result.metadata.relativePath,
+          filePath: result.metadata.relativePath,
+          score: Math.round(result.score * 1000) / 1000, // Round to 3 decimal places
+          content: result.content.length > 2000 
+            ? result.content.slice(0, 2000) + '...\n\n[Content truncated. Use the file path for complete documentation.]'
+            : result.content,
+        };
+      });
+
+      if (results.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `No documentation found for query "${query}" in Expo SDK ${version}.\n\nTry:\n- Using different search terms\n- Checking if you're using the correct Expo SDK version\n- Being more specific or more general with your query`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Found ${results.length} documentation ${results.length === 1 ? 'result' : 'results'} for "${query}" in Expo SDK ${version}:\n\n${
+              formattedResults.map(result => 
+                `## ${result.rank}. ${result.title}\n` +
+                `**File:** ${result.filePath}\n` +
+                `**Relevance:** ${result.score}\n\n` +
+                `${result.content}\n\n---\n`
+              ).join('')
+            }`,
+          },
+        ],
+      };
+
+    } catch (error) {
+      // Re-throw McpError as-is
+      if (error instanceof McpError) {
+        throw error;
+      }
+
+      // Handle other errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Check if it's a missing version error
+      if (errorMessage.includes('not found locally')) {
+        throw new McpError(ErrorCode.InvalidParams, errorMessage);
+      }
+
+      // Check if it's an OpenAI API key error
+      if (errorMessage.includes('OPENAI_API_KEY')) {
+        throw new McpError(ErrorCode.InvalidParams, 'OpenAI API key is required. Please set the OPENAI_API_KEY environment variable.');
+      }
+
+      throw new McpError(ErrorCode.InternalError, `Search failed: ${errorMessage}`);
+    }
+  }
+
+  throw new McpError(ErrorCode.MethodNotFound, `Tool not found: ${name}`);
+});
+
+// Start the server
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  
+  // Log server start to stderr so it doesn't interfere with the MCP protocol
+  console.error('Expo Docs MCP Server started');
+}
+
+main().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
