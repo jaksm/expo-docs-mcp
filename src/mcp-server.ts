@@ -60,6 +60,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['query', 'version'],
         },
       },
+      {
+        name: 'get-instructions',
+        description: 'Get comprehensive instructions on how to use the Expo Docs MCP server, including available versions, search parameters, and usage examples.',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          additionalProperties: false,
+        },
+      },
     ],
   };
 });
@@ -174,6 +183,82 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       throw new McpError(ErrorCode.InternalError, `Search failed: ${errorMessage}`);
+    }
+  }
+
+  if (name === 'get-instructions') {
+    try {
+      const availableVersions = await VersionManager.getAvailableVersions();
+      
+      const instructions = `# Expo Docs MCP Server - Usage Instructions
+
+## Overview
+This MCP server provides semantic search capabilities for Expo SDK documentation. It uses AI-powered embeddings to find relevant documentation based on your queries.
+
+## Available Tools
+
+### 1. search-expo-docs
+Search through Expo documentation with semantic understanding.
+
+**Parameters:**
+- \`query\` (required): Your search question or keywords
+- \`version\` (required): Expo SDK version (${availableVersions.length > 0 ? availableVersions.join(', ') : 'latest'})
+- \`maxResults\` (optional): Number of results to return (1-10, default: 5)
+- \`scoreThreshold\` (optional): Minimum relevance score (0.0-1.0, default: 0.0)
+
+**Example:**
+\`\`\`json
+{
+  "query": "how to implement push notifications",
+  "version": "latest",
+  "maxResults": 3,
+  "scoreThreshold": 0.5
+}
+\`\`\`
+
+### 2. get-instructions
+Returns these usage instructions (no parameters needed).
+
+## Available Versions
+${availableVersions.length > 0 ? availableVersions.map(v => `- ${v}`).join('\n') : 'No versions currently available. Please check deployment configuration.'}
+
+## Usage Tips
+
+1. **Be specific**: Instead of "navigation", try "how to implement tab navigation with React Navigation"
+2. **Include context**: "expo-camera permissions setup" vs just "camera"
+3. **Use natural language**: "How do I handle app state changes?" works better than "app state"
+4. **Version matters**: Always specify the correct Expo SDK version for your project
+
+## Common Queries
+
+- "how to implement push notifications"
+- "expo-camera setup and permissions"
+- "configuring deep linking"
+- "building for production"
+- "expo modules development"
+- "handling app updates"
+
+## Troubleshooting
+
+- **No results found**: Try broader terms or check if you're using the correct version
+- **Low relevance scores**: Be more specific with your query
+- **Version not available**: Use one of the available versions listed above
+
+## Support
+
+For issues with this MCP server, visit: https://github.com/jaksm/expo-docs-mcp`;
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: instructions,
+          },
+        ],
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new McpError(ErrorCode.InternalError, `Failed to generate instructions: ${errorMessage}`);
     }
   }
 

@@ -26,5 +26,8 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 
+# Copy data directory if it exists (contains pre-indexed documentation)
+COPY --from=builder /app/data ./data
+
 # Default command supplied by MCP
 CMD ["node", "dist/mcp-server.js"]
