@@ -1,9 +1,12 @@
 {
   "name": "expo-docs-mcp",
   "version": "1.0.0",
-  "description": "MCP server for semantic search of pre-indexed Expo documentation",
+  "description": "MCP server for semantic search of pre-indexed Expo documentation. Search through Expo SDK documentation using AI-powered semantic search with version-specific results.",
   "main": "dist/mcp-server.js",
   "type": "module",
+  "bin": {
+    "expo-docs-mcp": "dist/mcp-server.js"
+  },
   "scripts": {
     "build": "npm run clean && npm run build:server",
     "build:server": "ncc build src/mcp-server.ts -o dist/server --target es2022 --external hnswlib-node && mv dist/server/index.js dist/mcp-server.js && rm -rf dist/server && mkdir -p dist/node_modules && cp -r node_modules/hnswlib-node dist/node_modules/ && cp -r data/* dist/ 2>/dev/null || true",

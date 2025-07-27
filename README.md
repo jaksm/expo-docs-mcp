@@ -1,211 +1,133 @@
-# Expo Docs MCP
+# Expo Docs MCP Server
 
-[![npm version](https://badge.fury.io/js/expo-docs-mcp.svg)](https://badge.fury.io/js/expo-docs-mcp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-A Model Context Protocol (MCP) server that provides semantic search capabilities for Expo documentation. This server enables AI assistants to search and retrieve relevant Expo documentation using natural language queries.
+MCP server for semantic search of pre-indexed Expo documentation. Search through Expo SDK documentation using AI-powered semantic search with version-specific results.
 
 ## Features
 
-- 🔍 **Semantic Search**: Advanced semantic search across Expo documentation
-- 📚 **Version Support**: Supports multiple Expo SDK versions (v51, v52, v53, latest)
-- ⚡ **Fast Retrieval**: Pre-indexed documentation for quick search results
-- 🎯 **Relevance Scoring**: Configurable similarity thresholds for precise results
-- 🔧 **Easy Integration**: Works with Claude Desktop, Claude Code, Cursor, and other MCP-compatible clients
+- 🔍 **Semantic Search**: AI-powered search through Expo documentation
+- 📚 **Version-Specific**: Search across different Expo SDK versions (v51, v52, v53, latest)
+- ⚡ **Fast Results**: Pre-indexed documentation with HNSW vector search
+- 🎯 **Relevant Results**: Similarity scoring and configurable result limits
 
-## Prerequisites
+## Tools
 
-- Node.js 18 or higher
-- OpenAI API key (for embeddings)
+### search-expo-docs
+
+Search Expo documentation using semantic search.
+
+**Parameters:**
+- `query` (string, required): The search query to find relevant Expo documentation
+- `version` (string, required): Expo SDK version (v53, v52, v51, or latest)
+- `maxResults` (number, optional): Maximum number of results to return (1-10, default: 5)
+- `scoreThreshold` (number, optional): Minimum similarity score threshold (0.0-1.0, default: 0.0)
+
+**Example:**
+```json
+{
+  "name": "search-expo-docs",
+  "arguments": {
+    "query": "how to use camera in expo",
+    "version": "v53",
+    "maxResults": 3
+  }
+}
+```
 
 ## Installation
 
-### Option 1: Smithery CLI (Recommended)
+### Via Smithery (Recommended)
 
-The easiest way to install this MCP server is using the Smithery CLI:
+Install directly using the Smithery CLI:
 
 ```bash
-npx @smithery/cli install expo-docs-mcp --client claude
+npx -y @smithery/cli install expo-docs-mcp --client claude
 ```
 
-### Option 2: Claude Desktop Manual Setup
+### Manual Installation for Claude Desktop
 
-1. First, ensure you have the built server available:
-```bash
-git clone https://github.com/your-username/expo-docs-mcp.git
-cd expo-docs-mcp
-npm install
-npm run build
-```
+1. Add to your Claude Desktop configuration file:
 
-2. Add to your Claude Desktop configuration file:
-
-**On macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**On Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "expo-docs": {
-      "command": "node",
-      "args": ["/path/to/expo-docs-mcp/dist/mcp-server.js"],
+      "command": "npx",
+      "args": ["-y", "expo-docs-mcp"],
       "env": {
-        "OPENAI_API_KEY": "your-openai-api-key-here"
+        "OPENAI_API_KEY": "your_openai_api_key_here"
       }
     }
   }
 }
 ```
 
-### Option 3: Claude Code
+2. Restart Claude Desktop
 
-1. Build the server:
+## Environment Variables
+
+- `OPENAI_API_KEY`: Required for semantic search functionality
+
+## Development
+
 ```bash
-git clone https://github.com/your-username/expo-docs-mcp.git
+# Clone the repository
+git clone https://github.com/jaksm/expo-docs-mcp.git
 cd expo-docs-mcp
-npm install
-npm run build
-```
 
-2. Add to your Claude Code MCP configuration:
-```bash
-claude mcp add expo-docs node /path/to/expo-docs-mcp/dist/mcp-server.js
-claude mcp config set expo-docs OPENAI_API_KEY=your-openai-api-key-here
-```
-
-### Option 4: Cursor
-
-1. Install and build:
-```bash
-git clone https://github.com/your-username/expo-docs-mcp.git
-cd expo-docs-mcp
-npm install
-npm run build
-```
-
-2. Add to your Cursor settings. In Cursor, go to Settings > Features > Model Context Protocol and add:
-```json
-{
-  "expo-docs": {
-    "command": "node",
-    "args": ["/path/to/expo-docs-mcp/dist/mcp-server.js"],
-    "env": {
-      "OPENAI_API_KEY": "your-openai-api-key-here"
-    }
-  }
-}
-```
-
-### Option 5: Local Development
-
-```bash
-git clone https://github.com/your-username/expo-docs-mcp.git
-cd expo-docs-mcp
+# Install dependencies
 npm install
 
-# Set your OpenAI API key
-export OPENAI_API_KEY=your-openai-api-key-here
-
-# Build the server
+# Build the project
 npm run build
 
 # Run the server
 npm start
-```
 
-## Configuration
-
-### Environment Variables
-
-- `OPENAI_API_KEY` (required): Your OpenAI API key for generating embeddings
-
-### Tool Parameters
-
-The server provides a `search-expo-docs` tool with the following parameters:
-
-- `query` (required): The search query to find relevant Expo documentation
-- `version` (required): Expo SDK version (e.g., "v53", "v52", "v51", "latest")
-- `maxResults` (optional): Maximum number of results to return (default: 5, max: 10)
-- `scoreThreshold` (optional): Minimum similarity score threshold (default: 0.0, max: 1.0)
-
-## Usage Examples
-
-Once configured, you can use natural language queries to search Expo documentation:
-
-```
-"How do I use Expo Router for navigation in v53?"
-"Show me examples of using Expo Camera"
-"What are the new features in Expo SDK 53?"
-"How to configure push notifications with Expo?"
-```
-
-## Supported Expo Versions
-
-- **v53** (latest): Latest Expo SDK with newest features
-- **v52**: Previous stable release
-- **v51**: Legacy support
-- **latest**: Always points to the most recent version
-
-## Development
-
-### Building the Server
-
-```bash
-npm run build
-```
-
-### Running in Development Mode
-
-```bash
+# Development mode
 npm run dev:server
 ```
 
-### Testing Search Functionality
+## Available Versions
 
-```bash
-npm run search
+- `latest`: Most recent Expo SDK documentation
+- `v53`: Expo SDK 53
+- `v52`: Expo SDK 52  
+- `v51`: Expo SDK 51
+
+## Usage Examples
+
+Search for camera-related documentation:
+```
+Query: "camera permissions and usage"
+Version: "v53"
 ```
 
-### Indexing Documentation (for maintainers)
-
-```bash
-npm run index-docs
+Find navigation information:
+```
+Query: "react navigation setup and routing"
+Version: "latest"
 ```
 
-## Project Structure
-
+Look up build configuration:
 ```
-├── src/
-│   ├── mcp-server.ts       # Main MCP server implementation
-│   ├── services/           # Core services
-│   │   ├── semantic-search.ts  # Search functionality
-│   │   └── version-manager.ts  # Version management
-│   └── types.ts           # TypeScript definitions
-├── data/                  # Pre-indexed documentation data
-├── scripts/               # Build and utility scripts
-└── dist/                  # Built server (generated)
+Query: "eas build configuration for iOS"
+Version: "v52"
 ```
 
-## Contributing
+## Architecture
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- **Semantic Search**: Uses OpenAI embeddings with HNSW indexing
+- **Version Management**: Separate indexes for each Expo SDK version
+- **Pre-processed Data**: Documentation is pre-indexed for fast retrieval
+- **MCP Protocol**: Standard Model Context Protocol implementation
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT
 
-## Troubleshooting
+## Contributing
 
-### Common Issues
-
-1. **"OpenAI API key not found"**: Ensure `OPENAI_API_KEY` is set in your environment
-2. **"Version not supported"**: Check that the version string matches supported versions (v51, v52, v53, latest)
-3. **"No results found"**: Try adjusting the `scoreThreshold` parameter or use broader search terms
-
-### Support
-
-For issues and feature requests, please open an issue on [GitHub](https://github.com/your-username/expo-docs-mcp/issues).
+Contributions welcome! Please read the contributing guidelines and submit pull requests to the main branch.
