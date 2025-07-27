@@ -19,13 +19,25 @@
     "expo",
     "documentation",
     "mcp",
+    "model-context-protocol",
     "semantic-search",
     "vectorization",
     "langchain",
-    "openai"
+    "openai",
+    "claude",
+    "cursor",
+    "ai-assistant"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaksm/expo-docs-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jaksm/expo-docs-mcp/issues"
+  },
+  "homepage": "https://github.com/jaksm/expo-docs-mcp#readme",
   "dependencies": {
     "@langchain/community": "^0.3.49",
     "@langchain/openai": "^0.6.3",
