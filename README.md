@@ -102,7 +102,7 @@ claude mcp config set expo-docs OPENAI_API_KEY=your_openai_api_key_here
 
 ## Environment Variables
 
-- `OPENAI_API_KEY`: Required for semantic search functionality
+- `OPENAI_API_KEY`: Required for generating text embeddings during search queries. The server uses OpenAI's text-embedding-3-large model to convert your search queries into vectors that can be matched against the pre-indexed Expo documentation vectors.
 
 ## Development
 
