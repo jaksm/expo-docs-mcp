@@ -66,6 +66,40 @@ npx -y @smithery/cli install expo-docs-mcp --client claude
 
 2. Restart Claude Desktop
 
+### Claude Code Installation
+
+For Claude Code, you can use the built-in MCP configuration:
+
+1. **Via Smithery CLI** (Recommended):
+```bash
+npx -y @smithery/cli install expo-docs-mcp --client claude-code
+```
+
+2. **Manual Configuration**:
+```bash
+# Add the MCP server to Claude Code
+claude mcp add expo-docs npx -y expo-docs-mcp
+
+# Set the OpenAI API key
+claude mcp config set expo-docs OPENAI_API_KEY=your_openai_api_key_here
+
+# Verify the configuration
+claude mcp list
+```
+
+3. **Alternative Local Build Method**:
+```bash
+# Clone and build locally
+git clone https://github.com/jaksm/expo-docs-mcp.git
+cd expo-docs-mcp
+npm install
+npm run build
+
+# Add to Claude Code
+claude mcp add expo-docs node ./dist/mcp-server.js
+claude mcp config set expo-docs OPENAI_API_KEY=your_openai_api_key_here
+```
+
 ## Environment Variables
 
 - `OPENAI_API_KEY`: Required for semantic search functionality
@@ -83,6 +117,9 @@ npm install
 # Build the project
 npm run build
 
+# Test the MCP server connection
+npm run test:mcp
+
 # Run the server
 npm start
 
@@ -99,22 +136,44 @@ npm run dev:server
 
 ## Usage Examples
 
-Search for camera-related documentation:
+### In Claude Desktop or Claude Code
+
+Once installed, you can ask questions about Expo documentation directly:
+
+**Camera-related queries:**
 ```
-Query: "camera permissions and usage"
-Version: "v53"
+How do I request camera permissions in Expo v53?
 ```
 
-Find navigation information:
+**Navigation setup:**
 ```
-Query: "react navigation setup and routing"
-Version: "latest"
+Show me how to set up React Navigation with Expo Router in the latest version
 ```
 
-Look up build configuration:
+**Build configuration:**
 ```
-Query: "eas build configuration for iOS"
-Version: "v52"
+What are the EAS build configuration options for iOS in Expo v52?
+```
+
+**SDK-specific features:**
+```
+What are the new features in Expo SDK 53?
+```
+
+### Direct Tool Usage
+
+If calling the tool directly, use this format:
+
+```json
+{
+  "name": "search-expo-docs",
+  "arguments": {
+    "query": "camera permissions and usage",
+    "version": "v53",
+    "maxResults": 3,
+    "scoreThreshold": 0.1
+  }
+}
 ```
 
 ## Architecture

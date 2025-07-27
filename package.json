@@ -13,6 +13,7 @@
     "dev:server": "tsx src/mcp-server.ts",
     "clean": "rm -rf dist",
     "start": "node dist/mcp-server.js",
+    "test:mcp": "node scripts/test-mcp-connection.js",
     "index-docs": "tsx scripts/index-docs.ts",
     "search": "tsx scripts/test-search.ts",
     "dev:build:cli": "ncc build src/cli.ts -o dist/cli --target es2022 && mv dist/cli/index.js dist/cli.js && rm -rf dist/cli",

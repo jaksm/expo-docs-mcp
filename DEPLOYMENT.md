@@ -86,6 +86,24 @@ Install via Smithery CLI:
 npx -y @smithery/cli install your-username/expo-docs-mcp --client claude
 ```
 
+### With Claude Code
+Install via Smithery CLI:
+```bash
+npx -y @smithery/cli install your-username/expo-docs-mcp --client claude-code
+```
+
+Or use Claude Code's built-in MCP commands:
+```bash
+# Add the server
+claude mcp add expo-docs npx -y your-username/expo-docs-mcp
+
+# Configure API key
+claude mcp config set expo-docs OPENAI_API_KEY=your_openai_api_key
+
+# Verify installation
+claude mcp list
+```
+
 ### Manual Configuration
 Add to your Claude Desktop config:
 ```json
@@ -115,9 +133,11 @@ Add to your Claude Desktop config:
 - Verify the data files are included in the build
 
 ### Connection Issues
-- Restart your MCP client (Claude Desktop, etc.)
+- **Claude Desktop**: Restart the application after configuration changes
+- **Claude Code**: Run `claude mcp list` to verify the server is registered correctly
 - Check the server status in Smithery dashboard
 - Verify the connection URL is correct
+- For Claude Code, ensure you have the latest version with MCP support
 
 ## Best Practices
 
