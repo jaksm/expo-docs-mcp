@@ -25,7 +25,7 @@ A Model Context Protocol (MCP) server that provides semantic search capabilities
 The easiest way to install this MCP server is using the Smithery CLI:
 
 ```bash
-npx @smithery/cli install expo-docs-mcp --client claude
+npx -y @smithery/cli install expo-docs-mcp --client claude
 ```
 
 ### Option 2: Claude Desktop Manual Setup
