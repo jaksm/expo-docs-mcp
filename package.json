@@ -46,7 +46,7 @@
     "@langchain/community": "^0.3.49",
     "@langchain/openai": "^0.6.3",
     "@langchain/textsplitters": "^0.1.0",
-    "@modelcontextprotocol/sdk": "^1.17.0",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "front-matter": "^4.0.2",
     "hnswlib-node": "^3.0.0",
     "mdx-to-md": "^0.5.2",
