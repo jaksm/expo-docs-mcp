@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/jaksm-expo-docs-mcp-badge.png)](https://mseep.ai/app/jaksm-expo-docs-mcp)
+
 # Expo Docs MCP Server
 
 MCP server for semantic search of pre-indexed Expo documentation. Search through Expo SDK documentation using AI-powered semantic search with version-specific results.
